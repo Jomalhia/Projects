@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+        - 27017:27017
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./data/mongo:/data/db
+
+  selenium:
+    image: selenium/standalone-firefox
+    container_name: selenium
+    ports:
+      - 4444:4444
+
+  scrapy:
+    build: .
+    container_name: scrapy
+    ports:
+     - "8888:8888"
+    command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+    links: 
+      - mongo
+      - selenium
+    volumes:
+      - ./:/home/dev/code/
+
+  flask:
+    build:
+      context: ./anime_app/
+      dockerfile: Dockerfile
+    image: flask_image
+    container_name: anime_app
+    ports:
+      - "8050:8050"
+    links: 
+      - mongo
+    volumes:
+      - ./anime_app:/home/flask
